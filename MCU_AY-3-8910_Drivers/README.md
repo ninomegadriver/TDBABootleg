@@ -19,6 +19,7 @@ MCU_AY-3-8910_AtMega328p-CHIP1-Fuses.png
 
 ****************************************
 CHIP2:
+
 Binary dump:
 MCU_AY-3-8910_AtMega328p-CHIP2.bin
 
