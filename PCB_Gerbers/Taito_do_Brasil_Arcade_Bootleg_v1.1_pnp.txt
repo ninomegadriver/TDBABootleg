@@ -1,0 +1,147 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=Taito_do_Brasil_Arcade_Bootleg_v1.1
+*Date=17:50:25
+*CreatedBy=Fritzing 0.9.6b..0.9.6
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;;65.7264;-115.454;-90;Bottom;TXT6
+2;;;90.1205;-114.051;0;Bottom;TXT5
+3;;THT;61.9962;-92.7808;-90;Bottom;J4
+4;;;15.3568;-30.3395;0;Bottom;TXT9
+5;;;112.156;-75.3809;0;Bottom;Via5
+6;;THT;97.826;-100.161;-90;Bottom;R- R+1
+7;;THT;70.806;-9.37038;0;Bottom;16Mhz
+8;;THT;102.706;-9.38082;0;Bottom;16Mhz
+9;;;50.8562;-83.8809;0;Bottom;Via11
+10;;;100.738;-121.6;-90;Top;TXT1
+11;2k;THT;80.6361;-59.7807;0;Bottom;R8
+12;;;44.656;-91.2807;0;Bottom;Via15
+13;;;2.45607;-2.38085;0;Bottom;Hole8
+14;;;102.456;-43.0809;0;Bottom;Via49
+15;;;54.7559;-112.981;0;Bottom;Via17
+16;;;69.9561;-43.0809;0;Bottom;Via48
+17;;;30.8559;-88.7808;0;Bottom;Via10
+18;;;15.3561;-73.0808;0;Bottom;Via50
+19;;;100.056;-67.1809;0;Bottom;Via23
+20;0.030;5 mm [THT];14.056;-28.9317;0;Bottom;LED4
+21;;;2.75607;-10.4808;0;Bottom;Via38
+22;;;110.656;-112.981;0;Bottom;Hole5
+23;;;5.38064;-68.3262;-90;Bottom;TXT7
+24;;THT;38.386;-68.7808;90;Bottom;RX
+25;1k;THT;44.0561;-25.6609;-90;Bottom;R13
+26;22pF;100 mil [THT, multilayer];69.3562;-4.40503;90;Bottom;22pFx2
+27;22pF;100 mil [THT, multilayer];104.556;-4.46147;90;Bottom;C6
+28;330;THT;67.3561;-108.501;-90;Bottom;R2
+29;;;106.056;-80.1807;0;Bottom;Via4
+30;;;110.256;-7.08092;0;Bottom;Via41
+31;;;0.975106;-7.7821;0;Bottom;TXT8
+32;;;19.5357;-34.7392;0;Bottom;IMG4
+33;;;1.65605;-90.9808;0;Bottom;Via1
+34;;;61.606;-115.542;-90;Bottom;TXT6
+35;;;34.1487;-43.9567;0;Bottom;IMG3
+36;;;42.1561;-103.381;0;Bottom;Via13
+37;330;THT;60.6562;-107.861;-90;Bottom;R1
+38;;;112.248;-6.98117;0;Bottom;TXT10
+39;;;71.4274;-61.4809;0;Bottom;Via20
+40;;;108.763;-121.495;-90;Top;TXT1
+41;;THT;10.4061;-116.081;90;Bottom;J3
+42;;;110.556;-32.8808;0;Bottom;Via24
+43;;trim_pot_pth;98.496;-62.4209;0;Bottom;Smooth
+44;;;2.96005;-68.3525;-90;Bottom;TXT7
+45;1k;THT;3.75606;-20.3009;90;Bottom;R12
+46;10k;THT;12.7761;-66.5808;180;Bottom;R6
+47;;THT;56.5016;-129.264;180;Bottom;J2
+48;;;65.7437;-115.964;-90;Bottom;TXT6
+49;;;104.356;-83.9808;0;Bottom;Via22
+50;1mF;100 mil [THT, electrolytic];104.448;-112.671;-90;Bottom;1000uFx2
+51;330;THT;73.256;-108.461;-90;Bottom;R3
+52;;;89.0561;-47.4807;0;Bottom;Via27
+53;;THT;38.386;-64.7808;90;Bottom;TX
+54;;;100.956;-83.9808;0;Bottom;Via21
+55;680;THT;63.6562;-107.861;-90;Bottom;680R
+56;;;28.868;-78.4707;0;Bottom;Via53
+57;;;111.956;-51.5808;0;Bottom;Via26
+58;680;THT;69.7561;-108.501;-90;Bottom;680R1
+59;;;2.85606;-66.7808;0;Bottom;Via36
+60;;;110.556;-2.38085;0;Bottom;Hole7
+61;;;5.25605;-66.7938;0;Bottom;Via40
+62;;;26.0361;-70.4109;-90;Bottom;Logic Level
+63;;dil40-6-zif_socket;54.4222;-28.4707;90;Bottom;AY-3-8910 #1
+64;;dil40-6-zif_socket;87.4221;-28.4707;90;Bottom;AY-3-8910 #2
+65;;;110.456;-59.9809;0;Bottom;Via7
+66;;trim_pot_pth;91.2962;-62.3207;180;Bottom;Mix
+67;;;0.946884;-10.2843;0;Bottom;TXT8
+68;;dil-08;39.866;-13.4709;90;Bottom;ne555
+69;;;108.456;-116.142;0;Bottom;Via51
+70;;;38.4071;-17.3131;0;Bottom;Via44
+71;22pF;100 mil [THT, multilayer];72.656;-4.41067;90;Bottom;C7
+72;;;74.6164;-115.696;-90;Bottom;TXT6
+73;;;89.5518;-106.543;0;Bottom;TXT4
+74;;THT;87.6561;-86.4208;0;Bottom;RIn G LIn1
+75;0.030;5 mm [THT];31.356;-22.7318;0;Bottom;LED3
+76;;;1.05606;-70.4807;0;Bottom;Via19
+77;;THT;110.056;-78.9907;0;Bottom;+12v GND
+78;;;67.8561;-77.0808;0;Bottom;Via35
+79;;;110.256;-9.38075;0;Bottom;Via42
+80;;;53.3561;-91.1808;0;Bottom;Via14
+81;;dip;71.3462;-31.7075;0;Bottom;Audio MCU #1
+82;;;2.65605;-8.18074;0;Bottom;Via39
+83;22pF;100 mil [THT, multilayer];27.7262;-100.281;0;Bottom;C3
+84;;;32.7485;-24.1709;0;Bottom;TXT9
+85;;THT;47.8862;-76.5808;90;Bottom;J6
+86;;THT;97.826;-73.0607;-90;Bottom;L- L+1
+87;1mF;100 mil [THT, electrolytic];104.448;-106.031;90;Bottom;C2 1000uf
+88;;pot_alpha_rv16af-20;109.122;-62.2807;90;Bottom;Volume
+89;;;70.056;-92.7808;0;Bottom;Via37
+90;;THT;26.4561;-93.3309;-90;Bottom;16Mhz
+91;;;89.156;-57.9808;0;Bottom;Via34
+92;;;28.7551;-69.1573;0;Bottom;Via52
+93;;;111.856;-30.3809;0;Bottom;Via25
+94;;;99.2382;-86.175;0;Bottom;TXT3
+95;;dipswitch-08;59.906;-65.3707;0;Bottom;Dip Switches
+96;;;112.156;-70.0808;0;Bottom;Via18
+97;;THT;84.6482;-108.504;180;Bottom;+5V
+98;;;2.45605;-85.9809;0;Bottom;Via2
+99;10k;THT;71.636;-51.4808;0;Bottom;R10
+100;;THT;110.056;-93.9908;0;Bottom;SW1
+101;;;40.5237;-9.55201;0;Bottom;Via46
+102;;THT;75.286;-70.1809;-90;Bottom;On Board Power
+103;;;69.756;-54.8809;0;Bottom;Via29
+104;;;100.556;-116.181;0;Bottom;Via28
+105;;;42.0559;-83.8809;0;Bottom;Via12
+106;22pF;100 mil [THT, multilayer];101.256;-4.45555;90;Bottom;22pFx2
+107;5V;TO220 [THT];99.4493;-109.392;90;Bottom;LM7805
+108;;;100.456;-55.7809;0;Bottom;Via33
+109;;;45.3215;-5.45979;0;Bottom;Via45
+110;;THT;42.126;-78.0808;-90;Bottom;J5
+111;;dip;103.946;-31.6508;0;Bottom;Audio MCU #2
+112;680;THT;75.7562;-108.501;-90;Bottom;680R2
+113;22pF;100 mil [THT, multilayer];27.7262;-86.3807;0;Bottom;C4
+114;;;112.224;-9.04562;0;Bottom;TXT10
+115;;;57.7113;-115.555;-90;Bottom;TXT6
+116;;;38.4776;-12.1626;0;Bottom;Via43
+117;;;44.7559;-101.981;0;Bottom;Via16
+118;;;22.056;-88.6809;0;Bottom;Via9
+119;;;2.45607;-112.981;0;Bottom;Hole6
+120;1k;THT;6.65607;-20.4008;90;Bottom;R14
+121;;;58.7644;-86.1261;-90;Bottom;ESP32 Devkit V1
+122;;;76.456;-116.681;0;Bottom;Via8
+123;;dip;14.0461;-87.1109;180;Bottom;Controlers MCU
+124;;;76.0561;-55.7809;0;Bottom;Via31
+125;;;85.156;-114.281;0;Bottom;Via47
+126;2k;THT;80.5362;-63.4809;0;Bottom;R7
+127;;;22.8073;-31.7987;0;Bottom;IMG2
+128;;;98.7031;-86.4726;0;Bottom;IMG1
+129;10k;THT;103.636;-51.4808;0;Bottom;R9
+130;;;61.6751;-115.901;-90;Bottom;TXT6
+131;;;74.5882;-115.837;-90;Bottom;TXT6
+132;;;89.56;-110.235;0;Bottom;TXT4
