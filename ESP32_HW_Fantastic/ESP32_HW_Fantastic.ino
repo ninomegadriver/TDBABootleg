@@ -32,7 +32,7 @@
 // Althought a boolean variable suggests that only one bit is
 // necessary to store it, it is surprisingly stored as one whole byte!
 //
-// Then if you think of a 256x256 pixels wide screen, it would
+// Then, if you think of a 256x256 pixels wide screen, it would
 // take 65kb of RAM to store it into a variable and we obviously can't
 // afford that... 
 //
@@ -40,7 +40,7 @@
 // of one byte, the amount of RAM would go down to just 8k!
 // 
 
-byte objdirty[12800]; // 12800 bytes = 320*320 or 102400 bits
+byte objdirty[12800]; // 12800 bytes = 320*320 or 102400 bits, more then enought for us...
 
 // Bitwise heler functions defines
 #define BITS_PER_BYTE (8)
