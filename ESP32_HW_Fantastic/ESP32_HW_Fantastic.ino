@@ -79,21 +79,21 @@ uint8_t ym_write_pos = 0;                         // AY-3-8910 write position
 uint8_t player1_ctl = 0x00;                       // Byte containing the players buffer
 uint8_t player2_ctl = 0x00;                       // One bit for each input
 
-int GAME = 1;                                     // What game are we running today? See numbering bellow...
+int GAME = 4;                                     // What game are we running today? See numbering bellow...
 
 
 // INPUT BITS for each game supported
 //
-// Game                            [Fantastic], [Kong], [Time Fighters]
-// Index                                0         1            2
-uint8_t IPT_COIN1[] =           {     0x02,     0x02,        0x02      };
-uint8_t IPT_JOYSTICK_LEFT[] =   {     0x04,     0x04,        0x04      };
-uint8_t IPT_JOYSTICK_RIGHT[] =  {     0x08,     0x08,        0x08      };
-uint8_t IPT_JOYSTICK_UP[] =     {     0x07,     0x80,        0x80      };
-uint8_t IPT_JOYSTICK_DOWN[] =   {     0x07,     0x20,        0x20      };
-uint8_t IPT_BUTTON1[] =         {     0x10,     0x07,        0x10      };
-uint8_t IPT_START1[] =          {     0x01,     0x01,        0x01      };
-uint8_t IPT_START2[] =          {     0x02,     0x02,        0x02      };
+// Game                            [Fantastic], [Kong], [Time Fighters], [Super Star Crest], [Zig Zag]
+// Index                                0         1            2                3                 4
+uint8_t IPT_COIN1[] =           {     0x02,     0x02,        0x02,             0x01,            0x01    };
+uint8_t IPT_JOYSTICK_LEFT[] =   {     0x04,     0x04,        0x04,             0x04,            0x04    };
+uint8_t IPT_JOYSTICK_RIGHT[] =  {     0x08,     0x08,        0x08,             0x08,            0x08    };
+uint8_t IPT_JOYSTICK_UP[] =     {     0x07,     0x80,        0x80,             0x07,            0x20    };
+uint8_t IPT_JOYSTICK_DOWN[] =   {     0x07,     0x20,        0x20,             0x07,            0x40    };
+uint8_t IPT_BUTTON1[] =         {     0x10,     0x07,        0x10,             0x10,            0x10    };
+uint8_t IPT_START1[] =          {     0x01,     0x01,        0x01,             0x01,            0x01    };
+uint8_t IPT_START2[] =          {     0x02,     0x02,        0x02,             0x02,            0x02    };
 
 
 int nmi = 1;                                      // MNI Helper, 1 when MNI is pending
@@ -115,6 +115,8 @@ uint8_t pixel[32];                                // R/W array of "pixels with d
 #include "fantastc.hpp"                           // "FANTASTIC" game includes
 #include "kong.hpp"                               // "GORILA" (a.k.a "kong") game includes
 #include "timefgtr.hpp"                           // "TIME FIGHTER" game includes
+#include "sstarcrs.hpp"                           // "SUPER STAR CREST" game includes
+#include "zigzag.hpp"                             // "ZIG ZAG" game includes
 #include "samples.hpp"                            // PCM samples used by "GORILA"
 
 // Direct sets a pixel on the output screen buffer
@@ -149,6 +151,8 @@ int tileval(int c, int x, int y){
   if(GAME == 0) return fantastc_tiles[c][x][y];
   if(GAME == 1) return kong_tiles[c][x][y];
   if(GAME == 2) return timefgtr_tiles[c][x][y];
+  if(GAME == 3) return zigzag_tiles[c][x][y];
+  if(GAME == 4) return zigzag_tiles[c][x][y];
   return 0;
 }
 
@@ -417,6 +421,18 @@ void load_game(int idx){
       timefgtr_pal();
       fantastc.attachRAM(0xffff);
       fantastc.load(0, timefgtr_cpu, 0x8000+1);
+      fantastc.run(0);
+    break;
+    case 3:
+      timefgtr_pal();
+      fantastc.attachRAM(0xffff);
+      fantastc.load(0, timefgtr_cpu, 0x8000+1);
+      fantastc.run(0);
+    break;
+    case 4:
+      zigzag_pal();
+      fantastc.attachRAM(0xffff);
+      fantastc.load(0, zigzag_cpu, 0x8000+1);
       fantastc.run(0);
     break;
   }
