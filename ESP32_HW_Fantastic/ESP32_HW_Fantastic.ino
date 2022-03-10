@@ -23,10 +23,6 @@
 #include "soc/timer_group_struct.h"
 #include "soc/timer_group_reg.h"
 
-// Bit value Helpers
-#define ALL_BITS_0 0
-#define ALL_BITS_1 255
-
 // Usually sprite priority would not be needed as long as we
 // clear the screen prior to start drawing on it. However we're not
 // fast enought to fill the whole screen each frame, so to avoid
@@ -34,14 +30,17 @@
 // not to draw the same pixel twice.
 //
 // Althought a boolean variable suggests that only one bit is
-// necessary to store, it is indeed stored as one whole byte.
+// necessary to store it, it is surprisingly stored as one whole byte!
+//
 // Then if you think of a 256x256 pixels wide screen, it would
-// take 65kb of RAM to store it into a variable.
-// However if we treat each pixel a single bit instead
-// of one byte, the amount of RAM would get down to just 8k!
+// take 65kb of RAM to store it into a variable and we obviously can't
+// afford that... 
+//
+// However, if we treat each pixel as a single bit instead
+// of one byte, the amount of RAM would go down to just 8k!
 // 
 
-byte objdirty[12800]; // 12800 = 320*320 bits
+byte objdirty[12800]; // 12800 bytes = 320*320 or 102400 bits
 
 // Bitwise heler functions defines
 #define BITS_PER_BYTE (8)
@@ -698,7 +697,7 @@ int Machine::readByte(void * context, int address)
         rv = 0b00000000;
         break;
       case 0xb800: // whatchdog
-        rv = ALL_BITS_1;
+        rv = 0xff;
         break;
       case 0x8807:
         //Serial.println("0x8807: ay8910_device::data_r");
