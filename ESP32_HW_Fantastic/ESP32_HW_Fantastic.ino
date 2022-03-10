@@ -27,6 +27,40 @@
 #define ALL_BITS_0 0
 #define ALL_BITS_1 255
 
+// Usually sprite priority would not be needed as long as we
+// clear the screen prior to start drawing on it. However we're not
+// fast enought to fill the whole screen each frame, so to avoid
+// blinking sprites, we need to implement a priority system so
+// not to draw the same pixel twice.
+//
+// Althought a boolean variable suggests that only one bit is
+// necessary to store, it is indeed stored as one whole byte.
+// Then if you think of a 256x256 pixels wide screen, it would
+// take 65kb of RAM to store it into a variable.
+// However if we treat each pixel a single bit instead
+// of one byte, the amount of RAM would get down to just 8k!
+// 
+
+byte objdirty[12800]; // 12800 = 320*320 bits
+
+// Bitwise heler functions defines
+#define BITS_PER_BYTE (8)
+#define GET_BIT(x, n) ((((x)[(n) / BITS_PER_BYTE]) & (0x1 << ((n) % BITS_PER_BYTE))) != 0)
+#define SET_BIT(x, n) ((x)[(n) / BITS_PER_BYTE]) |= (0x1 << ((n) % BITS_PER_BYTE))
+#define RESET_BIT(x, n) ((x)[(n) / BITS_PER_BYTE]) &= ~(0x1 << ((n) % BITS_PER_BYTE))
+
+// Set a pixel at given position dirty
+void set_dirty(int x, int y){
+  int pixel = x * 320 + y;
+  SET_BIT(objdirty,pixel);
+}
+
+// Return if pixel at given position is dirty
+int get_dirty(int x, int y){
+  int pixel = x * 320 + y;
+  return GET_BIT(objdirty,pixel);
+}
+
 // Basic structure for transfering AY-3-8910
 // register values over Serial
 struct YMREG{
@@ -86,6 +120,9 @@ uint8_t pixel[32];                                // R/W array of "pixels with d
 
 // Direct sets a pixel on the output screen buffer
 bool setpixel(int x=0, int y=0, int idx=0){
+  
+    if(get_dirty(x, y) == 1) return false; // If pixel is dirty/already drawn, skip it!
+    
     if(idx>31) idx=0;
     int dx = screen_width-y-1;
     int dy = x;
@@ -93,6 +130,11 @@ bool setpixel(int x=0, int y=0, int idx=0){
     dx-=32;
     dy-=8;
     if(dx<32 || dx > 288 || dy<8 || dy > 232) return false;
+
+    // Let's fix the orientation again to match original hardware
+    dx = screen_width  - dx;
+    dy = screen_height - dy;
+    
 
     if(dx < screen_width && dy <screen_height && dx>= 0 && dy >= 0){
         DisplayController.setRawPixel(dx,dy,pixel[idx]);
@@ -206,6 +248,7 @@ void drawtilemasknew(int tile, int x, int y, int col, int xflip, int yflip, int 
                                 if (tileval(tile,xx,yy)){
                                   idx = tileval(tile,xx,yy)|(col<<bits);
                                   setpixel(x+xx, y+yy, idx);
+                                  set_dirty(x+xx, y+yy);
                                 }
                                    
                }
@@ -217,6 +260,7 @@ void drawtilemasknew(int tile, int x, int y, int col, int xflip, int yflip, int 
                                 {
                                   idx = tileval(tile,7-xx,yy)|(col<<bits);
                                   setpixel(x+xx, y+yy, idx);
+                                  set_dirty(x+xx, y+yy);
                                 }
                               
                                    
@@ -232,6 +276,7 @@ void drawtilemasknew(int tile, int x, int y, int col, int xflip, int yflip, int 
                                 {
                                   idx = tileval(tile,xx,7-yy)|(col<<bits);
                                   setpixel(x+xx, y+yy, idx);
+                                  set_dirty(x+xx, y+yy);
                                 }
                                    
                }
@@ -242,6 +287,7 @@ void drawtilemasknew(int tile, int x, int y, int col, int xflip, int yflip, int 
                                 if (tileval(tile,7-xx,7-yy)){
                                   idx = tileval(tile,7-xx,7-yy)|(col<<bits);
                                   setpixel(x+xx, y+yy, idx);
+                                  set_dirty(x+xx, y+yy);
                                 }
                }
         }
@@ -410,28 +456,8 @@ void Machine::draw(){
   int kong_title=0;
   int kong_tente=0;
 
-  // Background Processing, for all games
-  for (x = 32; x>0; x--)
-  {
-    for (y = 0; y < 32; y++)
-    {
-        c = fantastc.m_RAM[0x9000+(pos++)];
-        if(c == 176)  kong_title++;
-        scroll=(signed char)fantastc.m_RAM[0x9800+(y<<1)];
-        destx = ((x<<3)+scroll)&255;
-        desty = y<<3;
-
-        // THIS IS A HACK!
-        // Specific conditions for detecting the title screen of "GORILA"
-        if(GAME == 1 && fantastc.m_Z80.readRegByte(18) == 0 && fantastc.m_Z80.readRegByte(8) == 167 && desty >= 80 && desty <= 176) {
-          // Ignore these tiles, this space will be filled bellow
-        } else drawtilenew(c,destx,desty,fantastc.m_RAM[0x9801+(y<<1)],0,0,2); // Otherwise just draw those tiles
-    }
-  }
-
-  // THIS IS A HACK!
-  // Ok, so it's the title screen of "GORILA", let's replace that logo with the correct one!
-  if(GAME == 1 && fantastc.m_Z80.readRegByte(18) == 0 && fantastc.m_Z80.readRegByte(8) == 167 && kong_title == 65) gorila_title();
+  // Reset the sprite priority bit array the fastest way
+  memset(objdirty,0x00,sizeof(objdirty));
 
   // Sprites processing, for all games
   int spritex,spritey,spritecode,xflip,yflip,spritecol;
@@ -449,7 +475,6 @@ void Machine::draw(){
             if(spritecode == 408) kong_tente++;                    // THIS IS A HACK! Condition to invoke "Tente outra vez" sample for "GORILA"
             xflip=fantastc.m_RAM[0x9841+ccc]&0x80;
             yflip=fantastc.m_RAM[0x9841+ccc]&0x40;
-            //if(spritex < 240 && spritey < 240){
                         if (!xflip)
                         {
                                 if (!yflip)
@@ -484,10 +509,34 @@ void Machine::draw(){
                                         drawtilemasknew(spritecode+1,spritex,spritey,spritecol,1,1,2);
                                 }
                         }
-            //}    
           }
           
         }
+  
+  
+  // Background Processing, for all games
+  for (x = 32; x>0; x--)
+  {
+    for (y = 0; y < 32; y++)
+    {
+        c = fantastc.m_RAM[0x9000+(pos++)];
+        if(c == 176)  kong_title++;
+        scroll=(signed char)fantastc.m_RAM[0x9800+(y<<1)];
+        destx = ((x<<3)+scroll)&255;
+        desty = y<<3;
+
+        // THIS IS A HACK!
+        // Specific conditions for detecting the title screen of "GORILA"
+        if(GAME == 1 && fantastc.m_Z80.readRegByte(18) == 0 && fantastc.m_Z80.readRegByte(8) == 167 && desty >= 80 && desty <= 176) {
+          // Ignore these tiles, this space will be filled bellow
+        } else drawtilenew(c,destx,desty,fantastc.m_RAM[0x9801+(y<<1)],0,0,2); // Otherwise just draw those tiles
+    }
+  }
+
+  // THIS IS A HACK!
+  // Ok, so it's the title screen of "GORILA", let's replace that logo with the correct one!
+  if(GAME == 1 && fantastc.m_Z80.readRegByte(18) == 0 && fantastc.m_Z80.readRegByte(8) == 167 && kong_title == 65) gorila_title();
+
 
 
   // bullets processing, used by "FANTASTIC" and "TIME FIGHTERS"
