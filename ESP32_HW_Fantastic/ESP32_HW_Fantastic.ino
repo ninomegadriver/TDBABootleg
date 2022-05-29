@@ -1,7 +1,7 @@
 #pragma GCC optimize ("O3")
 
 /*
- * Taito do Brasil Arcade Bootleg v1.1
+ * Taito do Brasil Arcade Bootleg v1.2
  * Nino MegaDriver - nino@nino.com.br
  * License GPL v3.0
  * 
