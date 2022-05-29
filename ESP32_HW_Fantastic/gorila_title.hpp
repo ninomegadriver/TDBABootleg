@@ -9,10 +9,10 @@
  */
 void gorila_title(){
 
-      int x = 8;
+      int x = 16;
       int y = 80;
 
-      // "GORILA" graphics using default tile
+      // "GORILA" graphics using the default tile
       drawtilenew(16,x+8,y+0,1,0,0,2);
       drawtilenew(176,x+16,y+0,1,0,0,2);
       drawtilenew(176,x+24,y+0,1,0,0,2);

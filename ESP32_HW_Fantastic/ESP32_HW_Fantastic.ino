@@ -88,7 +88,7 @@ uint8_t ym_write_pos = 0;                         // AY-3-8910 write position
 uint8_t player1_ctl = 0x00;                       // Byte containing the players buffer
 uint8_t player2_ctl = 0x00;                       // One bit for each input
 
-int GAME = 0;                                     // What game are we running today? See numbering bellow...
+int GAME = 1;                                     // What game are we running today? See numbering bellow...
 
 
 // INPUT BITS for each game supported
@@ -133,7 +133,7 @@ uint8_t pixel[32];                                // R/W array of "pixels with d
 // Menuing Vars
 Bitmap *menu_bitmaps[] = { &menu_fantastc, &menu_kong};                 // Bitmaps for the selection page for each game
 XT_Wav_Class *menu_samples[] = {&wav_menu_fantastic, &wav_menu_gorila}; // Samples for each menu page
-uint8_t menu_active = 1;                                                // Menu active?
+uint8_t menu_active = 0;                                                // Menu active?
 int menu_item = GAME;                                                   // Default menu item pointing to default GAME
 uint8_t menu_item_last = -1;                                            // Last selected item
 uint8_t menu_item_max = 1;                                              // Max index for the menu items (Currently only Fantastic and Kong are playable
@@ -379,7 +379,7 @@ void clear_screen(){
 // Our all beloved Arduino setup(), the first code to ever run on startup
 void setup() {
 
-  // The hardware uses one Serial stream at 115200 boudrates
+  // The hardware uses one Serial stream at 115200bps
   // TX => Sends regs to the AY-3-8910 MCU drivers
   // RX => Receives two bytes, one for each player inputs, from the controllers MCU
   Serial.begin(115200);
@@ -391,9 +391,11 @@ void setup() {
   // 320x240@60 was adopted to narrow down configuration issues with different arcade monitors
   // The image is centered on screen, leaving enough room to ajust the monitor but also not
   // losing that lovely scanline definition
+
   // For Arcade Monitors:
   DisplayController.setResolution("\"320x240_60.00\" 6.00 320 336 360 400 240 243 247 252 -hsync -vsync");
-  // For VGA Monitors
+
+  // For CRT VGA Monitors
   // DisplayController.setResolution("\"320x240_120.00\" 12.25  320 336 360 400 240 243 247 261 -hsync +vsync");
   
   
@@ -410,7 +412,6 @@ void setup() {
 
   delay(1000);
 
-
   // Starts a parallel task on core 1 to handle the Serial communication
   xTaskCreatePinnedToCore(SerialTASK, "SerialTASK", 8192, NULL, 1, NULL, 1);
 
@@ -420,14 +421,13 @@ void setup() {
 // Used for debugging
 void freeheap(){
   Serial.println("----");
-  Serial.print("Total heap: "); Serial.println(ESP.getHeapSize());
-  Serial.print("Free heap: "); Serial.println(ESP.getFreeHeap());
+  Serial.print("Total heap: ");  Serial.println(ESP.getHeapSize());
+  Serial.print("Free heap: ");   Serial.println(ESP.getFreeHeap());
   Serial.print("Total PSRAM: "); Serial.println(ESP.getPsramSize());
   Serial.print("Free PSRAM:: "); Serial.println(ESP.getFreePsram());
 }
 
 // Helper, prints a white square frame on the boundaries of the screen
-// Used for debugging
 void screen_bounds(){
 
   for(int x=0;x<screen_width;x++)  DisplayController.setRawPixel(x,0,pixel[3]);
@@ -523,21 +523,7 @@ void Machine::draw(){
   int kong_title=0;
   int kong_tente=0;
 
-//  cv.clear();               // Clear screen canvas
-//  cv.waitCompletion(true);  // Wait until next VSync 
-//  delayMicroseconds(100);   // Give it a little time to finish
-
-/*
-  DisplayController.enableBackgroundPrimitiveTimeout(false);
-  DisplayController.enableBackgroundPrimitiveExecution(false);
-  fabgl::Primitive p;
-  p.cmd = fabgl::PrimitiveCmd::Clear;
-  DisplayController.addPrimitive(p);
-  DisplayController.processPrimitives();
-*/
-
-  screen_bounds();
- 
+  screen_bounds(); // Draw screen boundaries frame 
 
   // Sprites processing, for all games
   int spritex,spritey,spritecode,xflip,yflip,spritecol;
