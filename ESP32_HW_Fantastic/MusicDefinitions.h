@@ -1,6 +1,6 @@
 
 /*************************************************
- * Public Constants - XT_Dac_Audio
+ * Public Constants - XT_Dac_Audio (not used yet)
  *************************************************/
 
 
