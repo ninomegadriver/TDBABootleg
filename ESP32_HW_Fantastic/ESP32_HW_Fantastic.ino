@@ -88,7 +88,7 @@ uint8_t ym_write_pos = 0;                         // AY-3-8910 write position
 uint8_t player1_ctl = 0x00;                       // Byte containing the players buffer
 uint8_t player2_ctl = 0x00;                       // One bit for each input
 
-int GAME = 1;                                     // What game are we running today? See numbering bellow...
+int GAME = 0;                                     // What game are we running today? See numbering bellow...
 
 
 // INPUT BITS for each game supported
@@ -105,6 +105,9 @@ uint8_t IPT_BUTTON1[] =         {     0x10,     0x07,        0x10,             0
 uint8_t IPT_START1[] =          {     0x01,     0x01,        0x01,             0x01,            0x01    };
 uint8_t IPT_START2[] =          {     0x02,     0x02,        0x02,             0x02,            0x02    };
 
+// Frame Duration time.
+// Tune in if you want more fps
+uint64_t frame_time[] =         {   16000,     15000,       16000,            16000,           16000    };
 
 int nmi = 1;                                      // MNI Helper, 1 when MNI is pending
 
@@ -133,7 +136,7 @@ uint8_t pixel[32];                                // R/W array of "pixels with d
 // Menuing Vars
 Bitmap *menu_bitmaps[] = { &menu_fantastc, &menu_kong};                 // Bitmaps for the selection page for each game
 XT_Wav_Class *menu_samples[] = {&wav_menu_fantastic, &wav_menu_gorila}; // Samples for each menu page
-uint8_t menu_active = 0;                                                // Menu active?
+uint8_t menu_active = 1;                                                // Menu active?
 int menu_item = GAME;                                                   // Default menu item pointing to default GAME
 uint8_t menu_item_last = -1;                                            // Last selected item
 uint8_t menu_item_max = 1;                                              // Max index for the menu items (Currently only Fantastic and Kong are playable
@@ -1003,7 +1006,7 @@ void Machine::run(int address)
         }
         else {                                                                         // Normal CPU processing
           cycles += nextStep();                                                        // Step the CPU
-          if(nmi && (esp_timer_get_time() > tfps + 16000)){                            // If NMI is pending and we're just in the right time, INTERRUPT!
+          if(nmi && (esp_timer_get_time() > tfps + frame_time[GAME])){                 // If NMI is pending and we're just in the right time, INTERRUPT!
              if(busy == 0)                                                             // If we're not busy drawing past frame, starts a new task
              xTaskCreatePinnedToCore(drawTASK, "drawTASK", 8192*2, NULL, 1, NULL, 0);  // otherwise skip the current frame
              tfps=esp_timer_get_time();                                                // Updates the timer vector
