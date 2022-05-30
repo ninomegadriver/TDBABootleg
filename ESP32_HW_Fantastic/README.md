@@ -37,3 +37,7 @@ for i in `find -name "*.cpp"`; do sed -i 's/"O2"/"O3"/g' $i; done;
 I also recommend using this [sdkconfig](https://raw.githubusercontent.com/ninomegadriver/TDBABootleg/main/ESP32_HW_Fantastic/sdkconfig) with optimal settings for this project.  
   
   
+See it in action here:  
+[![Taito Do Brasil Bootleg v1.2 - Fantastic Hardware](https://img.youtube.com/vi/sqsus4Gnz_k/0.jpg)](https://www.youtube.com/watch?v=sqsus4Gnz_k)  
+  
+  
