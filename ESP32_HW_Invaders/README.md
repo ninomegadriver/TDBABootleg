@@ -17,7 +17,6 @@ This is still in a work-in-progress state. However we have this currently playab
 - Space Invaders Part II.
 - Polaris
   
-__
 Libraries used:  
   
 - FabGL (http://www.fabglib.org/) for video generation.  
