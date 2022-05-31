@@ -71,11 +71,15 @@ As of today, we have the following fully playable games:
   
 The ESP32 should be powerful enough to run many more classic and single processed arcade games. A work-in-progress is ongoing for supporting more Taito do Brasil games that run on Space Invaders hardware, such as:  
   
-- Space Invaders 2.
-- Batalha Espacial.
+- Galactica - Batalha Espacial.
 - Indian Battle.
+- Space Invaders.
+- Space Invaders Part II.
 - Polaris.
   
+**Work-in-progress of the Invaders hardware here:**  
+[![Taito Do Brasil Bootleg v1.2 - Invaders Hardware (WIP)](https://img.youtube.com/vi/LioPVbTkof8/0.jpg)](https://www.youtube.com/watch?v=LioPVbTkof8)  
+
 ***************************
 ## Special Thanks  
   
