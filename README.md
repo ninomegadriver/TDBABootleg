@@ -84,7 +84,7 @@ The ESP32 should be powerful enough to run many more classic and single processe
 ## Special Thanks  
   
 - Tom Walker and his emulator YAAME (http://yaame.emuunlim.com/) which served as a base for the graphics routines used in the [ESP32_HW_Fantastic](https://github.com/ninomegadriver/TDBABootleg/tree/main/ESP32_HW_Fantastic) code.
-- Alessandro Scotti for his fast an reliable [Space Invaders emulator](https://walkofmind.com/programming/side/side.htm) which provided most of the routines used in the Invaders Hardware code.
+- Alessandro Scotti for his fast an reliable [Space Invaders emulator](https://walkofmind.com/programming/side/side.htm) which provided most of the routines used in the [ESP32_HW_Invaders](https://github.com/ninomegadriver/TDBABootleg/tree/main/ESP32_HW_Invaders) code.
 - All MAME developers for providing tons of references and info in the MAME sources.  
 - Fabrizio Di Vittorio for his amazing FabGL graphics library which made the video implementation in project really easy.  
 - Alexsander dos Santos, which kindly donated a few Fantastic PCBs that served as a sparkling for this project. 
