@@ -43,6 +43,10 @@
 byte objdirty[8192]; // 8192 bytes = 256*256/8, more then enought for us...
 uint8_t busy = 0; // Semaphore for Video Drawing
 
+// Core Configuration
+int cpuCore  = 1; // Core # for CPU
+int gfxCore  = 0; // Core # for GPU
+
 // Bitwise heler functions defines
 #define BITS_PER_BYTE (8)
 #define GET_BIT(x, n) ((((x)[(n) / BITS_PER_BYTE]) & (0x1 << ((n) % BITS_PER_BYTE))) != 0)
@@ -88,29 +92,28 @@ uint8_t ym_write_pos = 0;                         // AY-3-8910 write position
 uint8_t player1_ctl = 0x00;                       // Byte containing the players buffer
 uint8_t player2_ctl = 0x00;                       // One bit for each input
 
-int GAME = 0;                                     // What game are we running today? See numbering bellow...
+int GAME = 7;                                     // What game are we running today? See numbering bellow...
 
 
 // INPUT BITS for each game supported
 // Currently only Fantastic and Kong/Gorila are fully playable
 //
-// Game                            [Fantastic], [Kong], [Time Fighters], [Super Star Crest], [Zig Zag]
-// Index                                0         1            2                3                 4
-uint8_t IPT_COIN1[] =           {     0x02,     0x02,        0x02,             0x01,            0x01    };
-uint8_t IPT_JOYSTICK_LEFT[] =   {     0x04,     0x04,        0x04,             0x04,            0x04    };
-uint8_t IPT_JOYSTICK_RIGHT[] =  {     0x08,     0x08,        0x08,             0x08,            0x08    };
-uint8_t IPT_JOYSTICK_UP[] =     {     0x07,     0x80,        0x80,             0x07,            0x20    };
-uint8_t IPT_JOYSTICK_DOWN[] =   {     0x07,     0x20,        0x20,             0x07,            0x40    };
-uint8_t IPT_BUTTON1[] =         {     0x10,     0x07,        0x10,             0x10,            0x10    };
-uint8_t IPT_START1[] =          {     0x01,     0x01,        0x01,             0x01,            0x01    };
-uint8_t IPT_START2[] =          {     0x02,     0x02,        0x02,             0x02,            0x02    };
+// Game                            [Fantastic], [Kong], [Time Fighters], [Super Star Crest], [Zig Zag], [Galaxian Taito], [Munch Man], [Galaxy Empire]
+// Index                                0         1            2                3                 4            5               6              7
+uint8_t IPT_COIN1[] =           {     0x02,     0x02,        0x02,             0x01,            0x01,         0x02,           0x02,         0x02,  };
+uint8_t IPT_JOYSTICK_LEFT[] =   {     0x04,     0x04,        0x04,             0x04,            0x04,         0x04,           0x04,         0x02,  };
+uint8_t IPT_JOYSTICK_RIGHT[] =  {     0x08,     0x08,        0x08,             0x08,            0x08,         0x08,           0x08,         0x02,  };
+uint8_t IPT_JOYSTICK_UP[] =     {     0x07,     0x80,        0x80,             0x07,            0x20,         0x07,           0x40,         0x02,  };
+uint8_t IPT_JOYSTICK_DOWN[] =   {     0x07,     0x20,        0x20,             0x07,            0x40,         0x07,           0x80,         0x02,  };
+uint8_t IPT_BUTTON1[] =         {     0x10,     0x07,        0x10,             0x10,            0x10,         0x10,           0x10,         0x02,  };
+uint8_t IPT_START1[] =          {     0x01,     0x01,        0x01,             0x01,            0x01,         0x01,           0x01,         0x02,  };
+uint8_t IPT_START2[] =          {     0x02,     0x02,        0x02,             0x02,            0x02,         0x02,           0x02,         0x02,  };
 
 // Frame Duration time.
 // Tune in if you want more fps
-uint64_t frame_time[] =         {   16000,     15000,       16000,            16000,           16000    };
+uint64_t frame_time[] =         {     14000,     140000,       14000,            14000,           14000,         14000,        14000,       14000   };
 
-int nmi = 1;                                      // MNI Helper, 1 when MNI is pending
-
+int nmi = 0;                                      // MNI Helper, 1 when MNI is pending
 
 fabgl::VGAController  DisplayController;          // Main Video Object
 fabgl::Canvas cv(&DisplayController);
@@ -125,6 +128,8 @@ long voice_latch = 0;                             // Latch for voice samples
 int screen_width   = 0;                           // Main output screen width, overwrited on setup();
 int screen_height  = 0;                           // Main output screen height, overwrited on setup();
 
+bool wireframe     = false;                       // Draw wireframe to display screen bounds?
+
 uint8_t pixel[32];                                // R/W array of "pixels with defined color", used as the color palette
 #include "fantastc.hpp"                           // "FANTASTIC" game includes
 #include "kong.hpp"                               // "GORILA" (a.k.a "kong") game includes
@@ -132,20 +137,26 @@ uint8_t pixel[32];                                // R/W array of "pixels with d
 #include "sstarcrs.hpp"                           // "SUPER STAR CREST" game includes
 #include "zigzag.hpp"                             // "ZIG ZAG" game includes
 #include "samples.hpp"                            // PCM samples used by "GORILA"
+#include "munch.hpp"                              // "Munch Man" game includes
+#include "galaxiant.hpp"                          // "Galaxian Title" game includes"
+#include "galemp.hpp"
 
 // Menuing Vars
 Bitmap *menu_bitmaps[] = { &menu_fantastc, &menu_kong};                 // Bitmaps for the selection page for each game
 XT_Wav_Class *menu_samples[] = {&wav_menu_fantastic, &wav_menu_gorila}; // Samples for each menu page
-uint8_t menu_active = 1;                                                // Menu active?
+uint8_t menu_active = 0;                                                // Menu active?
 int menu_item = GAME;                                                   // Default menu item pointing to default GAME
 uint8_t menu_item_last = -1;                                            // Last selected item
 uint8_t menu_item_max = 1;                                              // Max index for the menu items (Currently only Fantastic and Kong are playable
 
 
 // Direct sets a pixel on the output screen buffer
-bool setpixel(int x=0, int y=0, int idx=0){
-  
-    if(get_dirty(x, y)) return false; // If pixel is dirty/already drawn, skip it!
+bool setpixel(int x=0, int y=0, int idx=0 , int force = 0){
+
+    if(get_dirty(x, y) && force == 0) {
+      reset_dirty(x, y);
+      return false; // If pixel is dirty/already drawn, skip it!
+    }
 
     if(idx>31) idx=0;
     int dx = screen_width-y-1;
@@ -176,6 +187,9 @@ int tileval(int c, int x, int y){
   if(GAME == 2) return timefgtr_tiles[c][x][y];
   if(GAME == 3) return crest_tiles[c][x][y];
   if(GAME == 4) return zigzag_tiles[c][x][y];
+  if(GAME == 5) return galaxiant_tiles[c][x][y];
+  if(GAME == 6) return munch_tiles[c][x][y];
+  if(GAME == 7) return galemp_tiles[c][x][y];
   return 0;
 }
 
@@ -215,11 +229,6 @@ void dumptiles(){
 // Draws a decoded tile on screen
 void drawtilenew(int tile, int x, int y, int col, int xflip, int yflip, int bits)
 {
-  /*
-       if(tile == 0x10){
-        if(get_dirty(x, y)) return; // If pixel is dirty/already drawn, skip it!
-       }
-       */
 
         int xx,yy, idx;
         if (!yflip)
@@ -272,6 +281,14 @@ void drawtilemasknew(int tile, int x, int y, int col, int xflip, int yflip, int 
 {
   
         int xx,yy, idx;
+
+
+        // Clean my spot!
+        for (yy=y;yy<y+8;yy++)
+          for (xx=x;xx<x+8;xx++)
+            setpixel(xx, yy, 0);
+            
+        
         if (!yflip)
         {
                if (!xflip)
@@ -387,6 +404,8 @@ void setup() {
   // RX => Receives two bytes, one for each player inputs, from the controllers MCU
   Serial.begin(115200);
 
+  freeheap();
+
   // Initialization of the FabGL Library
   DisplayController.begin();
 
@@ -396,13 +415,14 @@ void setup() {
   // losing that lovely scanline definition
 
   // For Arcade Monitors:
-  DisplayController.setResolution("\"320x240_60.00\" 6.00 320 336 360 400 240 243 247 252 -hsync -vsync");
+  // DisplayController.setResolution("\"320x240_60.00\" 6.00 320 336 360 400 240 243 247 252 -hsync -vsync");
 
   // For CRT VGA Monitors
-  // DisplayController.setResolution("\"320x240_120.00\" 12.25  320 336 360 400 240 243 247 261 -hsync +vsync");
-  
-  
+  DisplayController.setResolution("\"320x240_120.00\" 12.25  320 336 360 400 240 243 247 261 -hsync +vsync");
+  //DisplayController.setResolution("\"320x224_130.00\"   12.50  320 336 360 400  224 227 237 245 -hsync +vsync");
 
+  //DisplayController.setResolution(QVGA_320x240_60Hz);
+  
   // sets an initial color palette
   setpal();
 
@@ -416,7 +436,7 @@ void setup() {
   delay(1000);
 
   // Starts a parallel task on core 1 to handle the Serial communication
-  xTaskCreatePinnedToCore(SerialTASK, "SerialTASK", 8192, NULL, 1, NULL, 1);
+  xTaskCreatePinnedToCore(SerialTASK, "SerialTASK", 8192, NULL, 1, NULL, cpuCore);
 
 }
 
@@ -470,6 +490,18 @@ void load_game(int idx){
       zigzag_pal();
       fantastc.load(0, zigzag_cpu, 65535);
     break;
+    case 5:
+      galaxiant_pal();
+      fantastc.load(0, galaxiant_cpu, 65535);
+    break;
+    case 6:
+      munch_pal();
+      fantastc.load(0, munch_cpu, 65535);
+    break;
+    case 7:
+      galemp_pal();
+      fantastc.load(0, galemp_cpu, 65535);
+    break;
     default:
       fantastc_pal();
       fantastc.load(0, fantastc_cpu, 0x8000+1);
@@ -482,6 +514,9 @@ void load_game(int idx){
 // Main loop
 // The chosen game is started and the core0 is "locked" to the main CPU process
 void loop() {
+  cpuCore = xPortGetCoreID();
+  if(cpuCore == 1) gfxCore = 0;
+  else gfxCore = 1;
   load_game(GAME);
 }
 
@@ -516,34 +551,88 @@ bool chkSprite(int x, int y){
   }
 }
 
+void drawBullets(const uint8_t *base){
+  int dx, dy;
+  int m_flipscreen_y = 0;
+  /* iterate over scanlines */
+  for (int y = 0; y <= 224; y++)
+  {
+    uint8_t shell = 0xff, missile = 0xff;
+    uint8_t effy;
+
+    /* the first 3 entries match Y-1 */
+    effy = m_flipscreen_y ? ((y - 1) ^ 255) : (y - 1);
+    for (int which = 0; which < 3; which++)
+      if (uint8_t(base[which*4+1] + effy) == 0xff)
+        shell = which;
+
+    /* remaining entries match Y */
+    effy = m_flipscreen_y ? (y ^ 255) : y;
+    for (int which = 3; which < 8; which++)
+      if (uint8_t(base[which*4+1] + effy) == 0xff)
+      {
+        if (which != 7)
+          shell = which;
+        else
+          missile = which;
+      }
+    
+    /* draw the shell */
+    if (shell != 0xff) {
+      dy = 224 - base[shell*4+3] + 24 ;
+      dx = 255 -y + 8;
+      setpixel(dx, dy,   3, 32);
+      setpixel(dx, dy+1, 3, 32);
+      setpixel(dx, dy+2, 3, 32);
+    }
+
+    if (missile != 0xff){
+      dy = 224 - base[missile*4+3] + 24;
+      dx = 255 -y + 8;
+      setpixel(dx, dy,   3, 1);
+      setpixel(dx, dy+1, 3, 1);
+      setpixel(dx, dy+2, 3, 1);
+    }
+    
+  }
+}
+
 // Main game graphics processing routine
 void Machine::draw(){
   busy = 1; // Take the drawing slot
-  int y,x, destx, desty, cc, ccc;
+  int y,x, destx, desty, cc, ccc, spritebase, videobase;
   int pos=0;
   unsigned char c;
   signed char scroll;
   int kong_title=0;
   int kong_tente=0;
 
-  screen_bounds(); // Draw screen boundaries frame 
+  if(wireframe == true) screen_bounds(); // Draw screen boundaries frame
+  if(GAME == 4 || GAME == 5 || GAME == 6 || GAME == 7){
+    spritebase = 0x5800;
+    videobase  = 0x5000;
+  }else{
+    spritebase = 0x9800;
+    videobase  = 0x9000;
+  }
 
   // Sprites processing, for all games
   int spritex,spritey,spritecode,xflip,yflip,spritecol;
         for (cc=14;cc>-1;cc--)
         {
           ccc=cc<<2;
-          spritex=fantastc.m_RAM[0x9840+ccc]+8;
+          spritex=fantastc.m_RAM[spritebase+0x40+ccc]+8;
           
           if (spritex>8 && spritex<0xF8){
-            spritey=fantastc.m_RAM[0x9843+ccc]+1;
-            spritecol=fantastc.m_RAM[0x9842+ccc]&7;
-            spritecode=fantastc.m_RAM[0x9841+ccc]&0x3F;
+            spritey=fantastc.m_RAM[spritebase+0x43+ccc]+1;
+            spritecol=fantastc.m_RAM[spritebase+0x42+ccc]&7;
+            spritecode=fantastc.m_RAM[spritebase+0x41+ccc]&0x3F;
             spritecode<<=2;
-            spritecode += 0x100;
+            if(GAME == 4 || GAME == 6) spritecode+=256;
+            if(GAME == 0 || GAME == 1) spritecode += 0x100;
             if(spritecode == 408) kong_tente++;                    // THIS IS A HACK! Condition to invoke "Tente outra vez" sample for "GORILA"
-            xflip=fantastc.m_RAM[0x9841+ccc]&0x80;
-            yflip=fantastc.m_RAM[0x9841+ccc]&0x40;
+            xflip=fantastc.m_RAM[spritebase+0x41+ccc]&0x80;
+            yflip=fantastc.m_RAM[spritebase+0x41+ccc]&0x40;
                         if (!xflip)
                         {
                                 if (!yflip)
@@ -588,17 +677,17 @@ void Machine::draw(){
   {
     for (y = 0; y < 32; y++)
     {
-        c = fantastc.m_RAM[0x9000+(pos++)];
+        c = fantastc.m_RAM[videobase+(pos++)];
         //if(c == 0x10) continue;
         if(c == 176)  kong_title++;
-        scroll=(signed char)fantastc.m_RAM[0x9800+(y<<1)];
+        scroll=(signed char)fantastc.m_RAM[spritebase+(y<<1)];
         destx = ((x<<3)+scroll)&255;
         desty = y<<3;
         // THIS IS A HACK!
         // Specific conditions for detecting the title screen of "GORILA"
         if(GAME == 1 && fantastc.m_Z80.readRegByte(18) == 0 && fantastc.m_Z80.readRegByte(8) == 167 && desty >= 80 && desty <= 176) {
           // Ignore these tiles, this space will be filled bellow
-        } else drawtilenew(c,destx,desty,fantastc.m_RAM[0x9801+(y<<1)],0,0,2); // Otherwise just draw those tiles
+        } else drawtilenew(c,destx,desty,fantastc.m_RAM[spritebase+0x01+(y<<1)],0,0,2); // Otherwise just draw those tiles
     }
   }
 
@@ -608,13 +697,21 @@ void Machine::draw(){
   if(GAME == 1 && fantastc.m_Z80.readRegByte(18) == 0 && fantastc.m_Z80.readRegByte(8) == 167 && kong_title == 65) gorila_title();
 
 
+  if(GAME == 7){
+    drawBullets(&fantastc.m_RAM[0x5800+96]);
+  }
 
   // bullets processing, used by "FANTASTIC" and "TIME FIGHTERS"
-  if(GAME == 0 || GAME == 2){
+  if(GAME == 0 || GAME == 2 || GAME == 5){
     for (cc=0;cc<32;cc+=4)
     {
-      x=fantastc.m_RAM[0x9800+(0xc1+cc)]+7;
-      y=256-fantastc.m_RAM[0x9800+(0xc3+cc)]-4;
+      if(GAME == 1){
+        x=fantastc.m_RAM[spritebase+(0xc1+cc)]+7;
+        y=256-fantastc.m_RAM[spritebase+(0xc3+cc)]-4;
+      }else{
+        x=fantastc.m_RAM[0x5861+cc];
+        y=256-fantastc.m_RAM[0x5863+cc]-4;
+      }
       if (x>0&&x<256&&y>-1&&y<253)
       {
         if (cc!=28)
@@ -632,6 +729,8 @@ void Machine::draw(){
       }
     }
   }
+
+
 
   // PCM Samples processings for "GORILA"
   if(GAME == 1){
@@ -651,7 +750,7 @@ void Machine::draw(){
     }else if(kong_title == 0){
       voice_playing[0] = 0;
     }
-    if(fantastc.m_RAM[0x9000+(160)] == 0x60){
+    if(fantastc.m_RAM[videobase+(160)] == 0x60){
       if(voice_playing[1] == 0){
         DacAudio.Play(&wav_venha);
         voice_playing[1] = 1;
@@ -664,8 +763,6 @@ void Machine::draw(){
 
   busy = 0; // Free drawing slot
   
-  // Reset priotity buffer for the next run
-  memset(objdirty, 0x00, 8196);
 }
 
 // Paralell task for the graphics generation on core1
@@ -738,49 +835,75 @@ int Machine::readByte(void * context, int address)
 {
 
   byte            rv = 0;
- 
-  switch (address){
-      case 0xa000: // PORT IN0
-        //   0b00S00000
-        //rv = 0b11000000;
-        if(GAME == 1) rv = 0b00000000;
-        else rv = 0b01000000;
-        //if(esp_timer_get_time() - aux_t > 1000000){
-        //  aux_t = esp_timer_get_time();
-        //  rv |= IPT_COIN1;
-        //}
-        //getControllers();
-        if(getBit(player1_ctl,0) == true) rv |= IPT_COIN1[GAME];
-        if(getBit(player1_ctl,4) == true) rv |= IPT_JOYSTICK_LEFT[GAME];
-        if(getBit(player1_ctl,5) == true) rv |= IPT_JOYSTICK_RIGHT[GAME];
-        if(getBit(player1_ctl,6) == true && GAME != 1) rv |= IPT_BUTTON1[GAME];
-        if(getBit(player1_ctl,2) == true && GAME > 0) rv |= IPT_JOYSTICK_UP[GAME];
-        break;
-      case 0xa800: // PORT IN1
-        //0x[Bases][Coins Per Play]
-        rv = 0b00000000;
-        if(getBit(player1_ctl,1) == true && GAME != 1) rv |= IPT_START1[GAME];
-        if(getBit(player2_ctl,1) == true) rv |= IPT_START2[GAME];
-        if(getBit(player1_ctl,3) == true) rv |= IPT_JOYSTICK_DOWN[GAME];
-        if(getBit(player1_ctl,6) == true && GAME == 1) rv |= IPT_START1[GAME]; // Kong START=>Jump
-        break;
-      case 0xb000: // PORT IN2
-        //0xb000000[2 bits level];
-        //rv = 0b00000001;
-        //rv |= 1 >> 2;
-        rv = 0b00000000;
-        break;
-      case 0xb800: // whatchdog
-        rv = 0xff;
-        break;
-      case 0x8807:
-        //Serial.println("0x8807: ay8910_device::data_r");
-        break;
-      case 0x880d:
-        //Serial.println("0x880d: ay8910_device::data_r");
-        break;
+
+  if(GAME == 4 || GAME == 5 || GAME == 6 || GAME == 7){
+    switch (address){
+      case 0x6000: // PORT IN0
+          if(getBit(player1_ctl,0) == true) rv |= IPT_COIN1[GAME];
+          if(getBit(player1_ctl,4) == true) rv |= IPT_JOYSTICK_LEFT[GAME];
+          if(getBit(player1_ctl,5) == true) rv |= IPT_JOYSTICK_RIGHT[GAME];
+          if(getBit(player1_ctl,6) == true && GAME != 1) rv |= IPT_BUTTON1[GAME];
+          if(getBit(player1_ctl,2) == true && GAME > 0) rv |= IPT_JOYSTICK_UP[GAME];
+          break;
+      case  0x6800: // PORT IN1
+          if(getBit(player1_ctl,1) == true && GAME != 1) rv |= IPT_START1[GAME];
+          if(getBit(player2_ctl,1) == true) rv |= IPT_START2[GAME];
+          if(getBit(player1_ctl,3) == true) rv |= IPT_JOYSTICK_DOWN[GAME];
+          if(getBit(player1_ctl,6) == true && GAME == 1) rv |= IPT_START1[GAME]; // Kong START=>Jump
+          break;
+      case 0x7000: // PORT IN2
+          return 0x00;
+          break;
+      case 0x7800: // Watchdog
+          return 0xff;
+          break;
       default:
-        rv = ((Machine*)context)->m_RAM[address];
+          rv = ((Machine*)context)->m_RAM[address];    
+    }
+  }else{ 
+    switch (address){
+        case 0xa000: // PORT IN0
+          //   0b00S00000
+          //rv = 0b11000000;
+          if(GAME == 1) rv = 0b00000000;
+          else rv = 0b01000000;
+          //if(esp_timer_get_time() - aux_t > 1000000){
+          //  aux_t = esp_timer_get_time();
+          //  rv |= IPT_COIN1;
+          //}
+          //getControllers();
+          if(getBit(player1_ctl,0) == true) rv |= IPT_COIN1[GAME];
+          if(getBit(player1_ctl,4) == true) rv |= IPT_JOYSTICK_LEFT[GAME];
+          if(getBit(player1_ctl,5) == true) rv |= IPT_JOYSTICK_RIGHT[GAME];
+          if(getBit(player1_ctl,6) == true && GAME != 1) rv |= IPT_BUTTON1[GAME];
+          if(getBit(player1_ctl,2) == true && GAME > 0) rv |= IPT_JOYSTICK_UP[GAME];
+          break;
+        case 0xa800: // PORT IN1
+          //0x[Bases][Coins Per Play]
+          rv = 0b00000000;
+          if(getBit(player1_ctl,1) == true && GAME != 1) rv |= IPT_START1[GAME];
+          if(getBit(player2_ctl,1) == true) rv |= IPT_START2[GAME];
+          if(getBit(player1_ctl,3) == true) rv |= IPT_JOYSTICK_DOWN[GAME];
+          if(getBit(player1_ctl,6) == true && GAME == 1) rv |= IPT_START1[GAME]; // Kong START=>Jump
+          break;
+        case 0xb000: // PORT IN2
+          //0xb000000[2 bits level];
+          //rv = 0b00000001;
+          //rv |= 1 >> 2;
+          rv = 0b00000000;
+          break;
+        case 0xb800: // whatchdog
+          rv = 0xff;
+          break;
+        case 0x8807:
+          //Serial.println("0x8807: ay8910_device::data_r");
+          break;
+        case 0x880d:
+          //Serial.println("0x880d: ay8910_device::data_r");
+          break;
+        default:
+          rv = ((Machine*)context)->m_RAM[address];
+    }
   }
   return rv;
 }
@@ -845,27 +968,41 @@ void Machine::writeByte(void * context, int address, int value)
 
   ((Machine*)context)->m_RAM[address] = value;
 
-  // Hardware properties for all games
-  switch (address){
-      case 0x9000 ... 0x9bff: // 9800 VBLANK
-        //xTaskCreatePinnedToCore(drawTASK, "drawTASK", 8192*2, NULL, 1, NULL, 0);
+  if(GAME == 4 || GAME == 5 || GAME == 6 || GAME == 7){
+    switch (address){
+      case 0x6803:
+        // Noise
         break;
-      case 0x8803: // FX Addr
-        ay8910_device_address_w(0, value);
-        break;
-      case 0x880b: // FX Value
-        ay8910_device_data_w(0, value);
-        break;
-      case 0x880c: // FM Addr
-        ay8910_device_address_w(1, value);
-        break;
-      case 0x880e: // FM Value
-        ay8910_device_data_w(1, value);
-        break;
-      case 0xb000: // IRQ NMI
+      case 0x7001: // NMI
         nmi = value;
         break;
-        }
+      case 0x7800: // Sound Write
+        break;
+    }
+  }
+  
+
+  // Hardware properties common for some games
+    switch (address){
+        case 0x9000 ... 0x9bff: // 9800 VBLANK
+          //xTaskCreatePinnedToCore(drawTASK, "drawTASK", 8192*2, NULL, 1, NULL, gfxCore);
+          break;
+        case 0x8803: // FX Addr
+          ay8910_device_address_w(0, value);
+          break;
+        case 0x880b: // FX Value
+          ay8910_device_data_w(0, value);
+          break;
+        case 0x880c: // FM Addr
+          ay8910_device_address_w(1, value);
+          break;
+        case 0x880e: // FM Value
+          ay8910_device_data_w(1, value);
+          break;
+        case 0xb000: // IRQ NMI
+          nmi = value;
+          break;
+    }
 
    // Hardware properties for "GORILA"
    if(GAME == 1){
@@ -1004,16 +1141,16 @@ void Machine::run(int address)
           }
           delay(8); // Let's not exaust the core
         }
-        else {                                                                         // Normal CPU processing
-          cycles += nextStep();                                                        // Step the CPU
-          if(nmi && (esp_timer_get_time() > tfps + frame_time[GAME])){                 // If NMI is pending and we're just in the right time, INTERRUPT!
-             if(busy == 0)                                                             // If we're not busy drawing past frame, starts a new task
-             xTaskCreatePinnedToCore(drawTASK, "drawTASK", 8192*2, NULL, 1, NULL, 0);  // otherwise skip the current frame
-             tfps=esp_timer_get_time();                                                // Updates the timer vector
-             nmi = 0;                                                                  // Clears the NMI trigger
-             m_Z80.NMI();                                                              // Do a NON MASKABLE INTERRUPT!
+        else {                                                                               // Normal CPU processing
+          cycles += nextStep();
+          if(nmi && (esp_timer_get_time() > tfps + frame_time[GAME])){                       // If NMI is pending and we're just in the right time, INTERRUPT!
+             if(busy == 0)                                                                   // If we're not busy drawing past frame, starts a new task
+             xTaskCreatePinnedToCore(drawTASK, "drawTASK", 8192*2, NULL, 1, NULL, gfxCore);  // otherwise skip the current frame
+             tfps=esp_timer_get_time();                                                      // Updates the timer vector
+             nmi = 0;                                                                        // Clears the NMI trigger
+             m_Z80.NMI();                                                                    // Do a NON MASKABLE INTERRUPT!
              cycles = 0;
-             if(GAME == 1) DacAudio.FillBuffer();                                      // Fill samples buffer for GORILA
+             if(GAME == 1) DacAudio.FillBuffer();                                            // Fill samples buffer for GORILA
           }
         }
     }
